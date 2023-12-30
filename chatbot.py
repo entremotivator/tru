@@ -1,7 +1,6 @@
 import asyncio
 from typing import Optional
 
-import pydantic
 
 from trulens_eval.schema import AppDefinition
 from trulens_eval.schema import Record
