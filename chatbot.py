@@ -1,3 +1,5 @@
+# chatbot.py
+
 import streamlit as st
 import os
 from langchain.chains import LLMChain
@@ -6,14 +8,13 @@ from langchain.prompts import PromptTemplate
 from langchain.memory import ConversationBufferMemory
 from trulens_eval import TruChain, Feedback, OpenAI, Huggingface, Tru
 
+# Load environment variables from .streamlit/secrets.toml
+os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+os.environ["HUGGINGFACE_API_KEY"] = st.secrets["HUGGINGFACE_API_KEY"]
+
 hugs = Huggingface()
 openai = OpenAI()
 tru = Tru()
-tru.reset_database()
-
-# Load environment variables
-os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
-os.environ["HUGGINGFACE_API_KEY"] = st.secrets["HUGGINGFACE_API_KEY"]
 
 # Build LLM chain
 template = """You are a chatbot having a conversation with a human.
@@ -27,10 +28,8 @@ memory = ConversationBufferMemory(memory_key="chat_history")
 llm = ChatOpenAI(model_name="gpt-3.5-turbo")
 chain = LLMChain(llm=llm, prompt=prompt, memory=memory, verbose=True)
 
-# Question/answer relevance between overall question and answer.
+# TruLens Feedback Functions
 f_relevance = Feedback(openai.relevance).on_input_output()
-
-# Moderation metrics on output
 f_hate = Feedback(openai.moderation_hate).on_output()
 f_violent = Feedback(openai.moderation_violence, higher_is_better=False).on_output()
 f_selfharm = Feedback(openai.moderation_selfharm, higher_is_better=False).on_output()
@@ -66,4 +65,5 @@ if prompt := st.chat_input("What is up?"):
     st.session_state.messages.append(
         {"role": "assistant", "content": full_response})
 
+# Initialize TruLens' dashboard
 tru.run_dashboard()
